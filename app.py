@@ -3,20 +3,25 @@ import shutil
 from flask import Flask, request, redirect, url_for, send_from_directory, render_template
 import fitz  # PyMuPDF
 from PIL import Image
-from image_preprocessing import preprocess_image #Import the preprocessing function
+from image_preprocessing import preprocess_image  # Import the preprocessing function
+from binary_conversion import convert_all_images_to_binary  # Import the binary conversion function
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'temp'
 THUMBNAIL_FOLDER = 'temp/thumbnails'
+BINARY_FOLDER = 'temp/binary_images'  # Folder to store binary images
 
 # Ensure the folders exist
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 if not os.path.exists(THUMBNAIL_FOLDER):
     os.makedirs(THUMBNAIL_FOLDER)
+if not os.path.exists(BINARY_FOLDER):
+    os.makedirs(BINARY_FOLDER)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['THUMBNAIL_FOLDER'] = THUMBNAIL_FOLDER
+app.config['BINARY_FOLDER'] = BINARY_FOLDER
 
 @app.route('/')
 def upload_file():
@@ -52,6 +57,7 @@ def convert_pdf():
     pdf_path = os.path.join(app.config['UPLOAD_FOLDER'], 'uploaded.pdf')
     if os.path.exists(pdf_path):
         convert_selected_pages_to_images(pdf_path, selected_pages)
+        convert_all_images_to_binary(app.config['UPLOAD_FOLDER'], app.config['BINARY_FOLDER'])  # Convert to binary images
         return redirect(url_for('download_images'))
     return redirect(url_for('upload_file'))
 
@@ -60,6 +66,7 @@ def clear_upload_folder():
         shutil.rmtree(app.config['UPLOAD_FOLDER'])
     os.makedirs(app.config['UPLOAD_FOLDER'])
     os.makedirs(app.config['THUMBNAIL_FOLDER'])
+    os.makedirs(app.config['BINARY_FOLDER'])
 
 def create_thumbnails(pdf_path):
     doc = fitz.open(pdf_path)
@@ -78,18 +85,18 @@ def convert_selected_pages_to_images(pdf_path, selected_pages):
         pix = page.get_pixmap()
         img_path = os.path.join(app.config['UPLOAD_FOLDER'], f'page{page_num}.png')
         img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-        #img = preprocess_image(img)
+        img = preprocess_image(img)  # Preprocess the image
         img.save(img_path, 'PNG')
 
 @app.route('/images')
 def download_images():
-    images = [f for f in os.listdir(app.config['UPLOAD_FOLDER']) if f.endswith('.png') and 'page' in f]
+    images = [f for f in os.listdir(app.config['BINARY_FOLDER']) if f.endswith('.png') and 'page' in f]
     images.sort()
     return render_template('images.html', images=images)
 
 @app.route('/images/<filename>')
 def get_image(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    return send_from_directory(app.config['BINARY_FOLDER'], filename)
 
 @app.route('/thumbnails/<filename>')
 def get_thumbnail(filename):
