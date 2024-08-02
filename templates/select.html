@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Meta tags for character encoding and responsive design -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Title of the page -->
+    <title>Select Pages to Convert</title>
+    <!-- Inline CSS to style the page -->
+    <style>
+      /* Style for the container holding each thumbnail and checkbox */
+      .thumbnail {
+        display: flex; /* Use flexbox to align items horizontally */
+        align-items: center; /* Vertically center the items */
+        margin: 20px 0; /* Margin between rows */
+      }
+      /* Style for the images */
+      .thumbnail img {
+        max-width: 1000px; /* Set maximum width for images */
+        max-height: 1000px; /* Set maximum height for images */
+        margin-right: 20px; /* Space between image and checkbox */
+      }
+      /* Style for the checkboxes */
+      .thumbnail input {
+        margin-left: 20px; /* Space between checkbox and image (optional) */
+        width: 20px; /* Set width of the checkbox */
+        height: 20px; /* Set height of the checkbox */
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Main heading of the page -->
+    <h1>Select Pages to Convert</h1>
+    <!-- Form to submit selected pages for conversion -->
+    <form method="post" action="/convert">
+      <!-- Loop through each thumbnail image to display it with a checkbox -->
+      {% for thumbnail in thumbnails %}
+      <!-- Container for each thumbnail and checkbox -->
+      <div class="thumbnail">
+        <!-- Display the thumbnail image -->
+        <img
+          src="{{ url_for('get_thumbnail', filename=thumbnail) }}"
+          alt="{{ thumbnail }}"
+        />
+        <!-- Checkbox for selecting the page, value is the index of the page -->
+        <input type="checkbox" name="pages" value="{{ loop.index0 }}" />
+      </div>
+      {% endfor %}
+      <!-- Submit button to convert selected pages -->
+      <button type="submit">Convert Selected Pages</button>
+    </form>
+  </body>
+</html>
